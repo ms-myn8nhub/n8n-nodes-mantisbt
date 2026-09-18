@@ -37,7 +37,7 @@ export const operations: INodeProperties[] = [
 				routing: {
 					request: {
 						method: 'GET',
-						url: '/pages/issues/view/{{ $parameter.issueId }}',
+						url: '=/pages/issues/view/{{ $parameter.issueId }}',
 					},
 				},
 			},
