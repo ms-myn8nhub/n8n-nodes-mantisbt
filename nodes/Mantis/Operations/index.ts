@@ -4,11 +4,11 @@ import { INodeProperties, INodePropertyOptions } from 'n8n-workflow';
 // import Filters from './Filters';
 // import Impersonation from './Impersonation';
 import Issues from './Issues';
-// import IssueNotesAttachments from './IssueNotesAttachments';
+import IssueNotesAttachments from './IssueNotesAttachments';
 // import Lang from './Lang';
 import Pages from './Pages';
 import Projects from './Projects';
-// import Users from './Users';
+import Users from './Users';
 // import UserTokens from './UserTokens';
 
 const verbs = [
@@ -16,11 +16,11 @@ const verbs = [
 	// Filters,
 	// Impersonation,
 	Issues,
-	// IssueNotesAttachments,
+	IssueNotesAttachments,
 	// Lang,
 	Pages,
 	...Projects,
-	// Users,
+	Users,
 	// UserTokens,
 ];
 

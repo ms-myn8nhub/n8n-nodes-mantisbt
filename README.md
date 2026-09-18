@@ -15,6 +15,43 @@ This is an n8n community node. It lets you use **MantisBT** in your n8n workflow
 [Resources](#resources)  
 [Version history](#version-history)
 
+## Fork changes (v0.2.0)
+
+This fork fixes the two connection-breaking bugs of v0.1.3 and implements the
+create/update operations of the [MantisBT REST API](https://documenter.getpostman.com/view/29959/mantis-bug-tracker-rest-api/7Lt6zkP).
+
+**Fixes**
+
+1. `requestDefaults.baseURL` was hardcoded to `http://localhost:8989/api/rest`
+   (a leftover dev mock server), so every node execution failed with
+   `ECONNREFUSED 127.0.0.1:8989` no matter what Base URL the credential had.
+   It now resolves from the credential: `={{$credentials.baseUrl}}/api/rest`.
+2. Routing URLs containing `{{ ... }}` expressions were missing the leading
+   `=` required by n8n, so they were sent to the server as literal text
+   (e.g. `/issues/{{ $parameter.issueId }}`). All are prefixed now.
+3. `NodeConnectionType.Main` was referenced as a value; recent `n8n-workflow`
+   versions export it as a type only. Replaced with the equivalent `'main'`
+   string literal (same compiled output as before).
+
+**New operations** (see status tables below): Create/Update Issue, Create
+Issue Note (with optional time tracking), Create/Update Project,
+Create/Update Project Version, Add/Update Sub-Project, Get Project Users,
+Get Assignable Users, Add/Update Project User, Create/Update User. The
+`Users` and `Issue Notes` resources are now enabled in the UI.
+
+**Known limitations**
+
+- File attachments (issue files / note attachments) are not implemented yet:
+  they require binary-to-base64 handling that declarative routing cannot
+  currently express reliably. Use n8n's HTTP Request node for those endpoints.
+- Delete operations, filters, config, lang, user tokens and impersonation are
+  still work in progress.
+- Enum fields (priority, severity, status, ...) offer the standard MantisBT
+  labels; if your instance customizes them, set the field via an expression.
+
+**Testing**: `npm run build && node tools/smoke-test.js` simulates n8n's
+declarative routing resolution for every operation (19 checks).
+
 ## Implementation status
 
 ### Issues
@@ -33,11 +70,11 @@ This is an n8n community node. It lets you use **MantisBT** in your n8n workflow
 | Get issues reported by me              |             | x       | merged into one |        |
 | Get issues monitored by me             |             | x       | merged into one |        |
 | Get unassigned issues                  |             | x       | merged into one |        |
-| Create an issue (minimal)              |             |         |                 |        |
-| Create an issue                        |             |         |                 |        |
-| Create an issue with attachments       |             |         |                 |        |
-| Update an issue (minimal)              |             |         |                 |        |
-| Update an issue                        |             |         |                 |        |
+| Create an issue (minimal)              |             | x       | merged into one | x      |
+| Create an issue                        | x           |         |                 | x      |
+| Create an issue with attachments       |             | x       | binary data     |        |
+| Update an issue (minimal)              |             | x       | merged into one | x      |
+| Update an issue                        | x           |         |                 | x      |
 | Delete an issue                        |             |         |                 |        |
 | Monitor an issue                       |             |         |                 |        |
 | Monitor an issue (for specified users) |             |         |                 |        |
@@ -50,9 +87,9 @@ This is an n8n community node. It lets you use **MantisBT** in your n8n workflow
 
 | Endpoint                                | Implemented | Omitted | Note | Tested |
 | --------------------------------------- | ----------- | ------- | ---- | ------ |
-| Create an issue note                    |             |         |      |        |
-| Create an issue note with time tracking |             |         |      |        |
-| Create an issue note with attachment    |             |         |      |        |
+| Create an issue note                    | x           |         |      | x      |
+| Create an issue note with time tracking |             | x       | merged into one | x      |
+| Create an issue note with attachment    |             | x       | binary data |        |
 | Delete an issue note                    |             |         |      |        |
 | Add attachments to issue                |             |         |      |        |
 
@@ -60,13 +97,13 @@ This is an n8n community node. It lets you use **MantisBT** in your n8n workflow
 
 | Endpoint         | Implemented | Omitted | Note | Tested |
 | ---------------- | ----------- | ------- | ---- | ------ |
-| Project Users    |             |         |      |        |
-| Project Versions |             |         |      |        |
-| Sub-Projects     |             |         |      |        |
+| Project Users    | x           |         | get users, assignable users, add/update user | x      |
+| Project Versions | x           |         | get all, get one, create, update | x      |
+| Sub-Projects     | x           |         | add, update | x      |
 | Get all projects | x           |         |      |        |
 | Get a project    | x           |         |      |        |
-| Create a project |             |         |      |        |
-| Update a project |             |         |      |        |
+| Create a project | x           |         |      | x      |
+| Update a project | x           |         |      | x      |
 | Delete a project |             |         |      |        |
 
 ### Filters
@@ -86,9 +123,9 @@ This is an n8n community node. It lets you use **MantisBT** in your n8n workflow
 | Get User By Id            |             | x       | merged into one |        |
 | Get User By Id (select)   | x           |         |                 |        |
 | Get User By Username      |             |         |                 |        |
-| Create a user             |             |         |                 |        |
-| Create a user (minimal)   |             |         |                 |        |
-| Update User               |             |         |                 |        |
+| Create a user             | x           |         |                 | x      |
+| Create a user (minimal)   |             | x       | merged into one | x      |
+| Update User               | x           |         |                 | x      |
 | Reset user password       |             |         |                 |        |
 | Delete a user             |             |         |                 |        |
 
@@ -134,11 +171,19 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 
 ## Operations
 
-_List the operations supported by your node._
+- **Issues**: Get an issue, Get all issues (filter/pagination/select fields), Get issue files/file, **Create an issue**, **Update an issue** (PATCH semantics - only filled fields change)
+- **Issue Notes**: **Create an issue note** (optional view state and time tracking)
+- **Projects**: Get all/one, **Create**, **Update**
+- **Project Versions**: Get all/one, **Create**, **Update**
+- **Sub-Projects**: **Add**, **Update** (inherit-parent flag)
+- **Project Users**: **Get project users**, **Get assignable users (handlers)**, **Add or update project user**
+- **Users**: Get me / by ID / by username, **Create**, **Update**
+- **Pages**: Get issue view page
 
 ## Credentials
 
-_If users need to authenticate with the app/service, provide details here. You should include prerequisites (such as signing up with the service), available authentication methods, and how to set them up._
+- **Base URL**: the MantisBT instance root, e.g. `https://mantisbt.example.com` - **without** `/api/rest` and **without** a trailing slash (the node appends `/api/rest` itself).
+- **API Token**: create one in MantisBT under *My Account > API Tokens*. It is sent as the raw `Authorization` header value - MantisBT does **not** accept the `Bearer ` prefix.
 
 ## Compatibility
 
@@ -158,4 +203,5 @@ _By the time users are looking for community nodes, they probably already know n
 
 ## Version history
 
-_This is another optional section. If your node has multiple versions, include a short description of available versions and what changed, as well as any compatibility impact._
+- **0.2.0** - fix hardcoded `localhost:8989` baseURL and unresolved URL expressions; add create/update operations for issues, notes, projects, versions, sub-projects, project users and users; enable Users and Issue Notes resources; smoke-test tooling.
+- **0.1.3** - upstream (GET operations only; not connectable due to the baseURL bug).

@@ -13,6 +13,13 @@ export const enum Operations {
 	DeleteProject = 'deleteProject',
 }
 
+const projectStatusOptions = ['development', 'testing', 'stable', 'unused'].map((v) => ({
+	name: v,
+	value: v,
+}));
+
+const viewStateOptions = ['public', 'private'].map((v) => ({ name: v, value: v }));
+
 export const operations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
@@ -52,7 +59,163 @@ export const operations: INodeProperties[] = [
 				routing: {
 					request: {
 						method: 'GET',
-						url: '/projects/{{ $parameter.projectId }}',
+						url: '=/projects/{{ $parameter.projectId }}',
+					},
+				},
+			},
+			{
+				name: 'Create a Project',
+				value: 'createProject',
+				action: 'Create a project',
+				options: [
+					{
+						displayName: 'Name',
+						name: 'name',
+						type: 'string',
+						default: '',
+						required: true,
+						description: 'Project name (must be unique)',
+					},
+					{
+						displayName: 'Description',
+						name: 'description',
+						type: 'string',
+						typeOptions: {
+							rows: 3,
+						},
+						default: '',
+					},
+					{
+						displayName: 'Status',
+						name: 'status',
+						type: 'options',
+						options: [{ name: 'Do Not Set', value: '' }, ...projectStatusOptions],
+						default: '',
+					},
+					{
+						displayName: 'Enabled',
+						name: 'enabled',
+						type: 'boolean',
+						default: true,
+					},
+					{
+						displayName: 'View State',
+						name: 'viewState',
+						type: 'options',
+						options: [{ name: 'Do Not Set', value: '' }, ...viewStateOptions],
+						default: '',
+					},
+					{
+						displayName: 'Inherit Global Categories',
+						name: 'inheritGlobal',
+						type: 'boolean',
+						default: true,
+					},
+					{
+						displayName: 'File Upload Path',
+						name: 'filePath',
+						type: 'string',
+						default: '',
+						description: 'Server-side path for file uploads (advanced; uses global default if empty)',
+					},
+				],
+				routing: {
+					request: {
+						method: 'POST',
+						url: '/projects/',
+						body: {
+							name: '={{ $parameter.name }}',
+							description: '={{ $parameter.description || undefined }}',
+							status: '={{ $parameter.status ? { name: $parameter.status } : undefined }}',
+							enabled: '={{ $parameter.enabled }}',
+							view_state: '={{ $parameter.viewState ? { name: $parameter.viewState } : undefined }}',
+							inherit_global: '={{ $parameter.inheritGlobal }}',
+							file_path: '={{ $parameter.filePath || undefined }}',
+						},
+					},
+				},
+			},
+			{
+				name: 'Update a Project',
+				value: 'updateProject',
+				action: 'Update a project',
+				description: 'Update a project (only filled-in fields are changed)',
+				options: [
+					{
+						displayName: 'Name',
+						name: 'name',
+						type: 'string',
+						default: '',
+						description: 'New project name (leave empty to keep current)',
+					},
+					{
+						displayName: 'Description',
+						name: 'description',
+						type: 'string',
+						typeOptions: {
+							rows: 3,
+						},
+						default: '',
+					},
+					{
+						displayName: 'Status',
+						name: 'status',
+						type: 'options',
+						options: [{ name: 'Do Not Change', value: '' }, ...projectStatusOptions],
+						default: '',
+					},
+					{
+						displayName: 'Enabled',
+						name: 'enabled',
+						type: 'options',
+						options: [
+							{ name: 'Do Not Change', value: '' },
+							{ name: 'Yes', value: 'true' },
+							{ name: 'No', value: 'false' },
+						],
+						default: '',
+					},
+					{
+						displayName: 'View State',
+						name: 'viewState',
+						type: 'options',
+						options: [{ name: 'Do Not Change', value: '' }, ...viewStateOptions],
+						default: '',
+					},
+					{
+						displayName: 'Inherit Global Categories',
+						name: 'inheritGlobal',
+						type: 'options',
+						options: [
+							{ name: 'Do Not Change', value: '' },
+							{ name: 'Yes', value: 'true' },
+							{ name: 'No', value: 'false' },
+						],
+						default: '',
+					},
+					{
+						displayName: 'File Upload Path',
+						name: 'filePath',
+						type: 'string',
+						default: '',
+						description: 'Server-side path for file uploads (advanced)',
+					},
+				],
+				routing: {
+					request: {
+						method: 'PATCH',
+						url: '=/projects/{{ $parameter.projectId }}',
+						body: {
+							name: '={{ $parameter.name || undefined }}',
+							description: '={{ $parameter.description || undefined }}',
+							status: '={{ $parameter.status ? { name: $parameter.status } : undefined }}',
+							enabled:
+								'={{ $parameter.enabled === "true" ? true : ($parameter.enabled === "false" ? false : undefined) }}',
+							view_state: '={{ $parameter.viewState ? { name: $parameter.viewState } : undefined }}',
+							inherit_global:
+								'={{ $parameter.inheritGlobal === "true" ? true : ($parameter.inheritGlobal === "false" ? false : undefined) }}',
+							file_path: '={{ $parameter.filePath || undefined }}',
+						},
 					},
 				},
 			},

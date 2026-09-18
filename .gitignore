@@ -22,3 +22,6 @@ npm-debug.log*
 .vscode/launch.json
 
 mantis-test-env
+
+# npm pack artifacts
+*.tgz

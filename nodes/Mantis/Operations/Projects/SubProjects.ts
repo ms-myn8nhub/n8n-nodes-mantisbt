@@ -24,38 +24,78 @@ export const operations: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Get All Projects',
-				value: 'getAllProjects',
-				action: 'Get all projects',
-				routing: {
-					request: {
-						method: 'GET',
-						url: '/projects/',
-					},
-				},
-			},
-			{
-				name: 'Get a Project',
-				value: 'getProject',
-				action: 'Get a project',
+				name: 'Add a Sub-Project',
+				value: 'addSubProject',
+				action: 'Add a sub-project',
+				description:
+					'Link an existing project as a sub-project of the (parent) Project ID selected above',
 				options: [
 					{
-						displayName: 'Project ID',
-						name: 'projectId',
+						displayName: 'Sub-Project ID',
+						name: 'subProjectId',
 						type: 'number',
 						default: null,
-						description: 'ID of the project to retrieve',
+						description: 'ID of the project to attach as sub-project (provide ID or Name)',
+					},
+					{
+						displayName: 'Sub-Project Name',
+						name: 'subProjectName',
+						type: 'string',
+						default: '',
+						description: 'Name of the project to attach (used when Sub-Project ID is empty)',
+					},
+					{
+						displayName: 'Inherit Parent Categories',
+						name: 'inheritParent',
+						type: 'boolean',
+						default: true,
 					},
 				],
 				routing: {
 					request: {
-						method: 'GET',
-						url: '/projects/{{ $parameter.projectId }}',
+						method: 'POST',
+						url: '=/projects/{{ $parameter.projectId }}/subprojects',
+						body: {
+							project:
+								'={{ $parameter.subProjectId ? { id: $parameter.subProjectId } : ($parameter.subProjectName ? { name: $parameter.subProjectName } : undefined) }}',
+							inherit_parent: '={{ $parameter.inheritParent }}',
+						},
+					},
+				},
+			},
+			{
+				name: 'Update a Sub-Project',
+				value: 'updateSubProject',
+				action: 'Update a sub-project',
+				description: 'Update the parent-inheritance setting of a sub-project link',
+				options: [
+					{
+						displayName: 'Sub-Project ID',
+						name: 'subProjectId',
+						type: 'number',
+						default: null,
+						required: true,
+						description: 'ID of the sub-project',
+					},
+					{
+						displayName: 'Inherit Parent Categories',
+						name: 'inheritParent',
+						type: 'boolean',
+						default: true,
+					},
+				],
+				routing: {
+					request: {
+						method: 'PATCH',
+						url: '=/projects/{{ $parameter.projectId }}/subprojects/{{ $parameter.subProjectId }}',
+						body: {
+							inherit_parent: '={{ $parameter.inheritParent }}',
+						},
 					},
 				},
 			},
 		],
-		default: 'getAllProjects',
+		default: 'addSubProject',
 	},
 ];
 

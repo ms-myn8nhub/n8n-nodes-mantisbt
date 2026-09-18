@@ -12,6 +12,15 @@ export const enum Operations {
 	ProjectDeleteUser = 'projectDeleteUser',
 }
 
+const accessLevelOptions = [
+	'viewer',
+	'reporter',
+	'updater',
+	'developer',
+	'manager',
+	'administrator',
+].map((v) => ({ name: v, value: v }));
+
 export const operations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
@@ -25,38 +34,71 @@ export const operations: INodeProperties[] = [
 		},
 		options: [
 			{
-				name: 'Get All Projects',
-				value: 'getAllProjects',
-				action: 'Get all projects',
+				name: 'Get Project Users',
+				value: 'getProjectUsers',
+				action: 'Get project users',
 				routing: {
 					request: {
 						method: 'GET',
-						url: '/projects/',
+						url: '=/projects/{{ $parameter.projectId }}/users',
 					},
 				},
 			},
 			{
-				name: 'Get a Project',
-				value: 'getProject',
-				action: 'Get a project',
+				name: 'Get Assignable Users (Handlers)',
+				value: 'getProjectUsersThatCanBeAssignedIssues',
+				action: 'Get users that can be assigned issues',
+				routing: {
+					request: {
+						method: 'GET',
+						url: '=/projects/{{ $parameter.projectId }}/handlers',
+					},
+				},
+			},
+			{
+				name: 'Add or Update a Project User',
+				value: 'projectAddOrUpdateUser',
+				action: 'Add or update a project user',
+				description:
+					'Add a user to the project, or update their project-specific access level if already a member',
 				options: [
 					{
-						displayName: 'Project ID',
-						name: 'projectId',
+						displayName: 'User ID',
+						name: 'userId',
 						type: 'number',
 						default: null,
-						description: 'ID of the project to retrieve',
+						description: 'ID of the user (provide ID or Username)',
+					},
+					{
+						displayName: 'Username',
+						name: 'username',
+						type: 'string',
+						default: '',
+						description: 'Username (used when User ID is empty)',
+					},
+					{
+						displayName: 'Access Level',
+						name: 'accessLevel',
+						type: 'options',
+						options: accessLevelOptions,
+						default: 'developer',
+						required: true,
+						description: 'Project-specific access level for the user',
 					},
 				],
 				routing: {
 					request: {
-						method: 'GET',
-						url: '/projects/{{ $parameter.projectId }}',
+						method: 'POST',
+						url: '=/projects/{{ $parameter.projectId }}/users',
+						body: {
+							user: '={{ $parameter.userId ? { id: $parameter.userId } : ($parameter.username ? { name: $parameter.username } : undefined) }}',
+							access_level: '={{ { name: $parameter.accessLevel } }}',
+						},
 					},
 				},
 			},
 		],
-		default: 'getAllProjects',
+		default: 'getProjectUsers',
 	},
 ];
 
