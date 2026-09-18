@@ -24,7 +24,7 @@ export class Mantis implements INodeType {
 			},
 		],
 		requestDefaults: {
-			baseURL: 'http://localhost:8989/api/rest',
+			baseURL: '={{$credentials.baseUrl}}/api/rest',
 			url: '={{$credentials.baseUrl}}/api/rest',
 			headers: {
 				Accept: 'application/json',
