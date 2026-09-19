@@ -381,8 +381,17 @@ export const operations: INodeProperties[] = [
 						method: 'GET',
 						url: '=/issues/{{ $parameter.issueId }}',
 						qs: {
-							select_fields: '={{ $parameter.selectFields || "" }}',
+							// MantisBT 2.28.4 reads the query param "select" (not "select_fields")
+							select: '={{ $parameter.selectFields || undefined }}',
 						},
+					},
+					output: {
+						postReceive: [
+							{
+								type: 'rootProperty',
+								properties: { property: 'issues' },
+							},
+						],
 					},
 				},
 			},
@@ -395,6 +404,14 @@ export const operations: INodeProperties[] = [
 						method: 'GET',
 						url: '=/issues/{{ $parameter.issueId }}/files',
 					},
+					output: {
+						postReceive: [
+							{
+								type: 'rootProperty',
+								properties: { property: 'files' },
+							},
+						],
+					},
 				},
 			},
 			{
@@ -405,6 +422,14 @@ export const operations: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: '=/issues/{{ $parameter.issueId }}/files/{{ $parameter.fileId }}',
+					},
+					output: {
+						postReceive: [
+							{
+								type: 'rootProperty',
+								properties: { property: 'files' },
+							},
+						],
 					},
 				},
 			},
@@ -417,12 +442,22 @@ export const operations: INodeProperties[] = [
 						method: 'GET',
 						url: '/issues',
 						qs: {
+							// MantisBT 2.28.4 reads "page"/"page_size"/"filter_id"/"select"
+							// (upstream used page_number/filter/select_fields, which the API ignores)
 							page_size: '={{ $parameter.pageSize }}',
-							page_number: '={{ $parameter.pageNumber }}',
-							select_fields: '={{ $parameter.selectFields || "" }}',
-							filter: '={{ $parameter.filter || undefined }}',
+							page: '={{ $parameter.pageNumber }}',
+							select: '={{ $parameter.selectFields || undefined }}',
+							filter_id: '={{ $parameter.filter || undefined }}',
 							project_id: '={{ $parameter.projectId || undefined }}',
 						},
+					},
+					output: {
+						postReceive: [
+							{
+								type: 'rootProperty',
+								properties: { property: 'issues' },
+							},
+						],
 					},
 				},
 			},

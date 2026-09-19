@@ -1,4 +1,5 @@
 import type { INodeType, INodeTypeDescription } from 'n8n-workflow';
+import { NodeConnectionTypes } from 'n8n-workflow';
 import { mantisVerbsResources, mantisVerbsOperations, mantisVerbsFields } from './Operations';
 import { options } from './options';
 export class Mantis implements INodeType {
@@ -16,8 +17,8 @@ export class Mantis implements INodeType {
 		// 'main' is the runtime value of NodeConnectionType.Main across all
 		// n8n-workflow versions (the export became a string-literal union type
 		// in recent versions, so it can no longer be referenced as a value).
-		inputs: ['main'],
-		outputs: ['main'],
+	inputs: [NodeConnectionTypes.Main],
+	outputs: [NodeConnectionTypes.Main],
 		usableAsTool: true,
 		credentials: [
 			{

@@ -2,23 +2,16 @@
 	"node": "n8n-nodes-mantisbt.mantis",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": [
-		"Development",
-		"Developer Tools",
-		"Issue Tracking",
-		"Project Management",
-		"Mantis",
-		"Bug Tracking"
-	],
+	"categories": ["Development", "Miscellaneous"],
 	"resources": {
 		"credentialDocumentation": [
 			{
-				"url": "http://httpbin.org/#/Auth/get_bearer"
+				"url": "https://documenter.getpostman.com/view/29959/mantis-bug-tracker-rest-api/7Lt6zkP"
 			}
 		],
 		"primaryDocumentation": [
 			{
-				"url": "http://httpbin.org/"
+				"url": "https://documenter.getpostman.com/view/29959/mantis-bug-tracker-rest-api/7Lt6zkP"
 			}
 		]
 	}

@@ -138,6 +138,15 @@ export const operations: INodeProperties[] = [
 						method: 'GET',
 						url: '/projects/',
 					},
+					output: {
+						postReceive: [
+							{
+								// API returns {"projects":[...]} - unwrap to one item per project
+								type: 'rootProperty',
+								properties: { property: 'projects' },
+							},
+						],
+					},
 				},
 			},
 			{
@@ -148,6 +157,14 @@ export const operations: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: '=/projects/{{ $parameter.projectId }}',
+					},
+					output: {
+						postReceive: [
+							{
+								type: 'rootProperty',
+								properties: { property: 'projects' },
+							},
+						],
 					},
 				},
 			},

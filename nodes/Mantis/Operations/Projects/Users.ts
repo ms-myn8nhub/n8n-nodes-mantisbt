@@ -63,6 +63,45 @@ export const fields: INodeProperties[] = [
 			},
 		},
 	},
+	{
+		displayName: 'Minimum Access Level',
+		name: 'minAccessLevel',
+		type: 'options',
+		// Query param "access_level" is cast to int server-side, so values are numeric strings
+		options: [
+			{ name: 'All Levels (No Filter)', value: '' },
+			{ name: 'Viewer (10)', value: '10' },
+			{ name: 'Reporter (25)', value: '25' },
+			{ name: 'Updater (40)', value: '40' },
+			{ name: 'Developer (55)', value: '55' },
+			{ name: 'Manager (70)', value: '70' },
+			{ name: 'Administrator (90)', value: '90' },
+		],
+		default: '',
+		description: 'Only return users whose access level is at or above this value',
+		displayOptions: {
+			show: {
+				resource: [resource.value],
+				operation: [Operations.GetProjectUsers],
+			},
+		},
+	},
+	{
+		displayName: 'Include Access Levels',
+		name: 'includeAccessLevels',
+		type: 'boolean',
+		default: true,
+		description: "Whether to include each user's access level information in the response",
+		displayOptions: {
+			show: {
+				resource: [resource.value],
+				operation: [
+					Operations.GetProjectUsers,
+					Operations.GetProjectUsersThatCanBeAssignedIssues,
+				],
+			},
+		},
+	},
 ];
 
 export const operations: INodeProperties[] = [
@@ -85,6 +124,19 @@ export const operations: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: '=/projects/{{ $parameter.projectId }}/users',
+						qs: {
+							access_level: '={{ $parameter.minAccessLevel || undefined }}',
+							include_access_levels: '={{ $parameter.includeAccessLevels ? 1 : 0 }}',
+						},
+					},
+					output: {
+						postReceive: [
+							{
+								// API returns {"users":[...]} - unwrap to one item per user
+								type: 'rootProperty',
+								properties: { property: 'users' },
+							},
+						],
 					},
 				},
 			},
@@ -96,6 +148,18 @@ export const operations: INodeProperties[] = [
 					request: {
 						method: 'GET',
 						url: '=/projects/{{ $parameter.projectId }}/handlers',
+						qs: {
+							// handlers endpoint fixes access_level server-side (DEVELOPER)
+							include_access_levels: '={{ $parameter.includeAccessLevels ? 1 : 0 }}',
+						},
+					},
+					output: {
+						postReceive: [
+							{
+								type: 'rootProperty',
+								properties: { property: 'users' },
+							},
+						],
 					},
 				},
 			},

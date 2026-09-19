@@ -155,9 +155,11 @@ export const operations: INodeProperties[] = [
 						method: 'GET',
 						url: '/users/me',
 						qs: {
-							select_fields: '={{ $parameter.selectFields || "" }}',
+							// MantisBT reads the query param "select" (not "select_fields")
+							select: '={{ $parameter.selectFields || undefined }}',
 						},
 					},
+					// Note: /users/me returns a flat user object - no rootProperty unwrapping
 				},
 			},
 			{
@@ -169,8 +171,17 @@ export const operations: INodeProperties[] = [
 						method: 'GET',
 						url: '=/users/{{ $parameter.userId }}',
 						qs: {
-							select_fields: '={{ $parameter.selectFields || "" }}',
+							select: '={{ $parameter.selectFields || undefined }}',
 						},
+					},
+					output: {
+						postReceive: [
+							{
+								// API returns {"users":[user]} - unwrap to one item per user
+								type: 'rootProperty',
+								properties: { property: 'users' },
+							},
+						],
 					},
 				},
 			},
@@ -183,8 +194,17 @@ export const operations: INodeProperties[] = [
 						method: 'GET',
 						url: '=/users/username/{{ $parameter.username }}',
 						qs: {
-							select_fields: '={{ $parameter.selectFields || "" }}',
+							select: '={{ $parameter.selectFields || undefined }}',
 						},
+					},
+					output: {
+						postReceive: [
+							{
+								// API returns {"users":[user]} - unwrap to one item per user
+								type: 'rootProperty',
+								properties: { property: 'users' },
+							},
+						],
 					},
 				},
 			},

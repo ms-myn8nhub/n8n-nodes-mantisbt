@@ -10,6 +10,9 @@
  * Part B - request building: simulates n8n's RoutingNode expression resolution
  *          and asserts method/url/body/qs for every operation.
  * Part C - end-to-end mock HTTP request.
+ * Part D - output shaping: asserts postReceive rootProperty unwrapping per the
+ *          n8n declarative-node docs idiom, using response shapes verified in
+ *          the MantisBT 2.28.4 source (restcore handlers + Postman collection).
  */
 'use strict';
 const http = require('http');
@@ -75,8 +78,8 @@ const EXPECTED = {
 		updateSubProject: ['projectId', 'subProjectId', 'inheritParent'],
 	},
 	mantisProjectUsersVerb: {
-		getProjectUsers: ['projectId'],
-		getProjectUsersThatCanBeAssignedIssues: ['projectId'],
+		getProjectUsers: ['projectId', 'minAccessLevel', 'includeAccessLevels'],
+		getProjectUsersThatCanBeAssignedIssues: ['projectId', 'includeAccessLevels'],
 		projectAddOrUpdateUser: ['projectId', 'userId', 'username', 'accessLevel'],
 	},
 	mantisProjectVersionsVerb: {
@@ -180,15 +183,19 @@ check('B0: baseURL resolves from credentials', () => {
 	assert.strictEqual(buildRequest('getAllProjects', {}).baseURL, 'https://mantisbt.aube.website/api/rest');
 });
 
-check('B1: getAnIssue URL resolves', () => {
+check('B1: getAnIssue URL resolves; select param uses API name "select"', () => {
 	const r = buildRequest('getAnIssue', { issueId: 42, selectFields: '' });
 	assert.strictEqual(r.url, '/issues/42');
-	assert.deepStrictEqual(r.qs, { select_fields: '' });
+	assert.deepStrictEqual(r.qs, {}, 'empty selectFields must not send select=');
+	const r2 = buildRequest('getAnIssue', { issueId: 42, selectFields: 'id,summary' });
+	assert.deepStrictEqual(r2.qs, { select: 'id,summary' });
 });
 
-check('B2: getAllIssues qs guards empty filter/project', () => {
+check('B2: getAllIssues qs uses API names page/page_size/select/filter_id/project_id', () => {
 	const r = buildRequest('getAllIssues', { pageSize: 10, pageNumber: 1, selectFields: '', filter: '', projectId: null });
-	assert.deepStrictEqual(r.qs, { page_size: 10, page_number: 1, select_fields: '' });
+	assert.deepStrictEqual(r.qs, { page_size: 10, page: 1 });
+	const r2 = buildRequest('getAllIssues', { pageSize: 10, pageNumber: 2, selectFields: 'id', filter: 'assigned', projectId: 5 });
+	assert.deepStrictEqual(r2.qs, { page_size: 10, page: 2, select: 'id', filter_id: 'assigned', project_id: 5 });
 });
 
 check('B3: createAnIssue minimal', () => {
@@ -290,9 +297,26 @@ check('B14: projectAddOrUpdateUser by username', () => {
 	assert.deepStrictEqual(r.body, { user: { name: 'bob' }, access_level: { name: 'developer' } });
 });
 
-check('B15: getProjectUsers / handlers URLs', () => {
-	assert.strictEqual(buildRequest('getProjectUsers', { projectId: 2 }).url, '/projects/2/users');
-	assert.strictEqual(buildRequest('getProjectUsersThatCanBeAssignedIssues', { projectId: 2 }).url, '/projects/2/handlers');
+check('B15: getProjectUsers / handlers URLs + documented query params', () => {
+	const r = buildRequest('getProjectUsers', { projectId: 2, minAccessLevel: '', includeAccessLevels: true });
+	assert.strictEqual(r.url, '/projects/2/users');
+	assert.deepStrictEqual(r.qs, { include_access_levels: 1 });
+	const r2 = buildRequest('getProjectUsers', { projectId: 2, minAccessLevel: '25', includeAccessLevels: false });
+	assert.deepStrictEqual(r2.qs, { access_level: '25', include_access_levels: 0 });
+	const r3 = buildRequest('getProjectUsersThatCanBeAssignedIssues', { projectId: 2, includeAccessLevels: true });
+	assert.strictEqual(r3.url, '/projects/2/handlers');
+	assert.deepStrictEqual(r3.qs, { include_access_levels: 1 });
+});
+
+check('B19: users GET ops send "select" (API name), never select_fields', () => {
+	const me = buildRequest('getMyUserInfo', { selectFields: 'id,name' });
+	assert.deepStrictEqual(me.qs, { select: 'id,name' });
+	const meEmpty = buildRequest('getMyUserInfo', { selectFields: '' });
+	assert.deepStrictEqual(meEmpty.qs, {});
+	const byId = buildRequest('getUserById', { userId: 5, selectFields: 'id' });
+	assert.deepStrictEqual(byId.qs, { select: 'id' });
+	const byName = buildRequest('getUserByUsername', { username: 'bob', selectFields: '' });
+	assert.deepStrictEqual(byName.qs, {});
 });
 
 check('B16: createUser', () => {
@@ -312,6 +336,107 @@ check('B18: users GET urls', () => {
 	assert.strictEqual(buildRequest('getMyUserInfo', { selectFields: '' }).url, '/users/me');
 	assert.strictEqual(buildRequest('getUserById', { userId: 5, selectFields: '' }).url, '/users/5');
 	assert.strictEqual(buildRequest('getUserByUsername', { username: 'bob', selectFields: '' }).url, '/users/username/bob');
+});
+
+/* ------------ Part D: output shaping (postReceive rootProperty) ----------- */
+
+// Root property per wrapped GET, verified in MantisBT 2.28.4 source:
+// rest_issue_get -> {"issues":[...]} (single issue also wrapped),
+// rest_issue_files_get -> {"files":[...]} (single file also wrapped),
+// rest_projects_get -> {"projects":[...]}, VersionGetCommand -> {"versions":[...]},
+// ProjectUsersGetCommand -> {"users":[...]}, rest_user_get -> {"users":[user]}.
+const EXPECTED_ROOT = {
+	getAnIssue: 'issues',
+	getAllIssues: 'issues',
+	getIssueFiles: 'files',
+	getIssueFile: 'files',
+	getAllProjects: 'projects',
+	getProject: 'projects',
+	getProjectVersions: 'versions',
+	getProjectVersion: 'versions',
+	getProjectUsers: 'users',
+	getProjectUsersThatCanBeAssignedIssues: 'users',
+	getUserById: 'users',
+	getUserByUsername: 'users',
+};
+// Deliberate raw pass-through (no unwrapping):
+// - getMyUserInfo: /users/me returns a FLAT user object (live-verified)
+// - getIssueViewPage: HTML page
+// - all create/update ops: pass raw result through (safe for the 202
+//   moderation empty-body case on note add, and 204-style empty responses)
+const EXPECTED_NO_ROOT = [
+	'getMyUserInfo',
+	'getIssueViewPage',
+	'createAnIssue',
+	'updateAnIssue',
+	'createAnIssueNote',
+	'createProject',
+	'updateProject',
+	'addSubProject',
+	'updateSubProject',
+	'projectAddOrUpdateUser',
+	'createProjectVersion',
+	'updateProjectVersion',
+	'createUser',
+	'updateUser',
+];
+
+check('D0: every operation has an explicit rootProperty decision', () => {
+	const covered = new Set([...Object.keys(EXPECTED_ROOT), ...EXPECTED_NO_ROOT]);
+	for (const o of Object.keys(ops)) assert(covered.has(o), 'operation not covered by Part D: ' + o);
+});
+
+for (const [op, prop] of Object.entries(EXPECTED_ROOT)) {
+	check(`D1[${op}]: unwraps response via rootProperty "${prop}"`, () => {
+		const pr = ops[op].routing.output && ops[op].routing.output.postReceive;
+		assert(pr && pr.length === 1 && pr[0].type === 'rootProperty', 'missing postReceive rootProperty');
+		assert.strictEqual(pr[0].properties.property, prop);
+	});
+}
+
+for (const op of EXPECTED_NO_ROOT) {
+	check(`D2[${op}]: no response unwrapping (raw pass-through)`, () => {
+		assert.strictEqual(ops[op].routing.output, undefined);
+	});
+}
+
+// Simulate n8n's rootProperty transform on source-verified response shapes
+function applyRootProperty(response, prop) {
+	if (prop === undefined) return [response];
+	const v = response[prop];
+	if (v === undefined) return [response];
+	return Array.isArray(v) ? v : [v];
+}
+
+check('D3: unwrap simulation on source-verified MantisBT 2.28.4 response shapes', () => {
+	assert.strictEqual(applyRootProperty({ issues: [{ id: 1 }, { id: 2 }] }, 'issues').length, 2); // GET /issues
+	assert.strictEqual(applyRootProperty({ issues: [{ id: 42 }] }, 'issues').length, 1); // GET /issues/{id}
+	assert.strictEqual(applyRootProperty({ files: [{ id: 7 }] }, 'files').length, 1); // GET .../files/{fid}
+	assert.strictEqual(applyRootProperty({ projects: [] }, 'projects').length, 0); // empty list -> 0 items
+	assert.strictEqual(applyRootProperty({ versions: [{ name: '1.0' }] }, 'versions').length, 1);
+	assert.strictEqual(applyRootProperty({ users: [{ id: 3 }] }, 'users').length, 1); // rest_user_get wraps
+	assert.deepStrictEqual(applyRootProperty({ id: 3, name: 'me' }, undefined), [{ id: 3, name: 'me' }]); // /users/me flat
+});
+
+check('D4: inputs/outputs use NodeConnectionTypes.Main', () => {
+	assert.deepStrictEqual(d.inputs, ['main']);
+	assert.deepStrictEqual(d.outputs, ['main']);
+});
+
+check('D5: codex file points at real MantisBT docs (no template leftovers)', () => {
+	const codex = require('../nodes/Mantis/Mantis.node.json');
+	assert(!/httpbin/i.test(JSON.stringify(codex)), 'httpbin.org placeholder still present');
+	const url = codex.resources.primaryDocumentation[0].url;
+	assert(
+		url.startsWith('https://documenter.getpostman.com/'),
+		'unexpected primaryDocumentation url: ' + url,
+	);
+	for (const c of codex.categories) {
+		assert(
+			['Development', 'Miscellaneous'].includes(c),
+			'category not in the verified-valid set: ' + c,
+		);
+	}
 });
 
 /* ------------------------- Part C: e2e mock HTTP ------------------------- */
