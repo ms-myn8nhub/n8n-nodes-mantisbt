@@ -18,6 +18,13 @@ export const enum Operations {
 	DeleteUser = 'deleteUser',
 }
 
+const showFor = (operations: string[]) => ({
+	show: {
+		resource: [resource.value],
+		operation: operations,
+	},
+});
+
 const accessLevelOptions = [
 	'viewer',
 	'reporter',
@@ -27,14 +34,105 @@ const accessLevelOptions = [
 	'administrator',
 ].map((v) => ({ name: v, value: v }));
 
-const selectFieldsOption: INodeProperties = {
-	displayName: 'Select Fields',
-	name: 'selectFields',
-	type: 'string',
-	default: '',
-	placeholder: 'id,name,real_name,email,access_level',
-	description: 'Comma-separated list of fields to select. Leave empty for all fields.',
-};
+const triStateOptions = [
+	{ name: 'Do Not Change', value: '' },
+	{ name: 'Yes', value: 'true' },
+	{ name: 'No', value: 'false' },
+];
+
+export const fields: INodeProperties[] = [
+	{
+		displayName: 'User ID',
+		name: 'userId',
+		type: 'number',
+		default: null,
+		required: true,
+		description: 'ID of the user',
+		displayOptions: showFor([Operations.GetUserById, Operations.UpdateUser]),
+	},
+	{
+		displayName: 'Username',
+		name: 'username',
+		type: 'string',
+		default: '',
+		required: true,
+		displayOptions: showFor([Operations.GetUserByUsername, Operations.CreateUser]),
+	},
+	{
+		displayName: 'Username',
+		name: 'username',
+		type: 'string',
+		default: '',
+		description: 'New username (leave empty to keep current)',
+		displayOptions: showFor([Operations.UpdateUser]),
+	},
+	{
+		displayName: 'Password',
+		name: 'password',
+		type: 'string',
+		typeOptions: {
+			password: true,
+		},
+		default: '',
+		description: 'Set a password (on create: required unless the instance sends reset emails)',
+		displayOptions: showFor([Operations.CreateUser, Operations.UpdateUser]),
+	},
+	{
+		displayName: 'Real Name',
+		name: 'realName',
+		type: 'string',
+		default: '',
+		displayOptions: showFor([Operations.CreateUser, Operations.UpdateUser]),
+	},
+	{
+		displayName: 'Email',
+		name: 'email',
+		type: 'string',
+		placeholder: 'name@example.com',
+		default: '',
+		displayOptions: showFor([Operations.CreateUser, Operations.UpdateUser]),
+	},
+	{
+		displayName: 'Access Level',
+		name: 'accessLevel',
+		type: 'options',
+		options: [{ name: 'Do Not Set', value: '' }, ...accessLevelOptions],
+		default: '',
+		description: 'Global access level (instance default if not set)',
+		displayOptions: showFor([Operations.CreateUser, Operations.UpdateUser]),
+	},
+	{
+		displayName: 'Enabled',
+		name: 'enabled',
+		type: 'boolean',
+		default: true,
+		displayOptions: showFor([Operations.CreateUser]),
+	},
+	{
+		displayName: 'Enabled',
+		name: 'enabled',
+		type: 'options',
+		options: triStateOptions,
+		default: '',
+		displayOptions: showFor([Operations.UpdateUser]),
+	},
+	{
+		displayName: 'Protected',
+		name: 'protected',
+		type: 'boolean',
+		default: false,
+		description: 'Protected users cannot be deleted or have their accounts modified',
+		displayOptions: showFor([Operations.CreateUser]),
+	},
+	{
+		displayName: 'Protected',
+		name: 'protected',
+		type: 'options',
+		options: triStateOptions,
+		default: '',
+		displayOptions: showFor([Operations.UpdateUser]),
+	},
+];
 
 export const operations: INodeProperties[] = [
 	{
@@ -52,7 +150,6 @@ export const operations: INodeProperties[] = [
 				name: 'Get My User Info',
 				value: 'getMyUserInfo',
 				action: 'Get my user info',
-				options: [selectFieldsOption],
 				routing: {
 					request: {
 						method: 'GET',
@@ -67,16 +164,6 @@ export const operations: INodeProperties[] = [
 				name: 'Get User By ID',
 				value: 'getUserById',
 				action: 'Get user by ID',
-				options: [
-					{
-						displayName: 'User ID',
-						name: 'userId',
-						type: 'number',
-						default: null,
-						description: 'ID of the user to retrieve',
-					},
-					selectFieldsOption,
-				],
 				routing: {
 					request: {
 						method: 'GET',
@@ -91,16 +178,6 @@ export const operations: INodeProperties[] = [
 				name: 'Get User By Username',
 				value: 'getUserByUsername',
 				action: 'Get user by username',
-				options: [
-					{
-						displayName: 'Username',
-						name: 'username',
-						type: 'string',
-						default: '',
-						description: 'Username of the user to retrieve',
-					},
-					selectFieldsOption,
-				],
 				routing: {
 					request: {
 						method: 'GET',
@@ -115,59 +192,6 @@ export const operations: INodeProperties[] = [
 				name: 'Create a User',
 				value: 'createUser',
 				action: 'Create a user',
-				options: [
-					{
-						displayName: 'Username',
-						name: 'username',
-						type: 'string',
-						default: '',
-						required: true,
-					},
-					{
-						displayName: 'Password',
-						name: 'password',
-						type: 'string',
-						typeOptions: {
-							password: true,
-						},
-						default: '',
-						description: 'Initial password (required unless the instance sends reset emails)',
-					},
-					{
-						displayName: 'Real Name',
-						name: 'realName',
-						type: 'string',
-						default: '',
-					},
-					{
-						displayName: 'Email',
-						name: 'email',
-						type: 'string',
-						placeholder: 'name@example.com',
-						default: '',
-					},
-					{
-						displayName: 'Access Level',
-						name: 'accessLevel',
-						type: 'options',
-						options: [{ name: 'Do Not Set', value: '' }, ...accessLevelOptions],
-						default: '',
-						description: 'Global access level (instance default if not set)',
-					},
-					{
-						displayName: 'Enabled',
-						name: 'enabled',
-						type: 'boolean',
-						default: true,
-					},
-					{
-						displayName: 'Protected',
-						name: 'protected',
-						type: 'boolean',
-						default: false,
-						description: 'Protected users cannot be deleted or have their accounts modified',
-					},
-				],
 				routing: {
 					request: {
 						method: 'POST',
@@ -190,75 +214,6 @@ export const operations: INodeProperties[] = [
 				value: 'updateUser',
 				action: 'Update a user',
 				description: 'Update a user (only filled-in fields are changed)',
-				options: [
-					{
-						displayName: 'User ID',
-						name: 'userId',
-						type: 'number',
-						default: null,
-						required: true,
-						description: 'ID of the user to update',
-					},
-					{
-						displayName: 'Username',
-						name: 'username',
-						type: 'string',
-						default: '',
-						description: 'New username (leave empty to keep current)',
-					},
-					{
-						displayName: 'Password',
-						name: 'password',
-						type: 'string',
-						typeOptions: {
-							password: true,
-						},
-						default: '',
-						description: 'Set a new password (leave empty to keep current)',
-					},
-					{
-						displayName: 'Real Name',
-						name: 'realName',
-						type: 'string',
-						default: '',
-					},
-					{
-						displayName: 'Email',
-						name: 'email',
-						type: 'string',
-						placeholder: 'name@example.com',
-						default: '',
-					},
-					{
-						displayName: 'Access Level',
-						name: 'accessLevel',
-						type: 'options',
-						options: [{ name: 'Do Not Change', value: '' }, ...accessLevelOptions],
-						default: '',
-					},
-					{
-						displayName: 'Enabled',
-						name: 'enabled',
-						type: 'options',
-						options: [
-							{ name: 'Do Not Change', value: '' },
-							{ name: 'Yes', value: 'true' },
-							{ name: 'No', value: 'false' },
-						],
-						default: '',
-					},
-					{
-						displayName: 'Protected',
-						name: 'protected',
-						type: 'options',
-						options: [
-							{ name: 'Do Not Change', value: '' },
-							{ name: 'Yes', value: 'true' },
-							{ name: 'No', value: 'false' },
-						],
-						default: '',
-					},
-				],
 				routing: {
 					request: {
 						method: 'PATCH',
@@ -286,4 +241,5 @@ export const operations: INodeProperties[] = [
 export default {
 	resource: resource,
 	operations: operations,
+	fields: fields,
 };

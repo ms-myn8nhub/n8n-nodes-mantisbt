@@ -13,12 +13,109 @@ export const enum Operations {
 	DeleteProject = 'deleteProject',
 }
 
+const showFor = (operations: string[]) => ({
+	show: {
+		resource: [resource.value],
+		operation: operations,
+	},
+});
+
 const projectStatusOptions = ['development', 'testing', 'stable', 'unused'].map((v) => ({
 	name: v,
 	value: v,
 }));
 
 const viewStateOptions = ['public', 'private'].map((v) => ({ name: v, value: v }));
+
+const triStateOptions = [
+	{ name: 'Do Not Change', value: '' },
+	{ name: 'Yes', value: 'true' },
+	{ name: 'No', value: 'false' },
+];
+
+export const fields: INodeProperties[] = [
+	{
+		displayName: 'Name',
+		name: 'name',
+		type: 'string',
+		default: '',
+		required: true,
+		description: 'Project name (must be unique)',
+		displayOptions: showFor([Operations.CreateProject]),
+	},
+	{
+		displayName: 'Name',
+		name: 'name',
+		type: 'string',
+		default: '',
+		description: 'New project name (leave empty to keep current)',
+		displayOptions: showFor([Operations.UpdateProject]),
+	},
+	{
+		displayName: 'Description',
+		name: 'description',
+		type: 'string',
+		typeOptions: {
+			rows: 3,
+		},
+		default: '',
+		displayOptions: showFor([Operations.CreateProject, Operations.UpdateProject]),
+	},
+	{
+		displayName: 'Status',
+		name: 'status',
+		type: 'options',
+		options: [{ name: 'Do Not Set', value: '' }, ...projectStatusOptions],
+		default: '',
+		displayOptions: showFor([Operations.CreateProject, Operations.UpdateProject]),
+	},
+	{
+		displayName: 'Enabled',
+		name: 'enabled',
+		type: 'boolean',
+		default: true,
+		displayOptions: showFor([Operations.CreateProject]),
+	},
+	{
+		displayName: 'Enabled',
+		name: 'enabled',
+		type: 'options',
+		options: triStateOptions,
+		default: '',
+		displayOptions: showFor([Operations.UpdateProject]),
+	},
+	{
+		displayName: 'View State',
+		name: 'viewState',
+		type: 'options',
+		options: [{ name: 'Do Not Set', value: '' }, ...viewStateOptions],
+		default: '',
+		displayOptions: showFor([Operations.CreateProject, Operations.UpdateProject]),
+	},
+	{
+		displayName: 'Inherit Global Categories',
+		name: 'inheritGlobal',
+		type: 'boolean',
+		default: true,
+		displayOptions: showFor([Operations.CreateProject]),
+	},
+	{
+		displayName: 'Inherit Global Categories',
+		name: 'inheritGlobal',
+		type: 'options',
+		options: triStateOptions,
+		default: '',
+		displayOptions: showFor([Operations.UpdateProject]),
+	},
+	{
+		displayName: 'File Upload Path',
+		name: 'filePath',
+		type: 'string',
+		default: '',
+		description: 'Server-side path for file uploads (advanced; uses global default if empty)',
+		displayOptions: showFor([Operations.CreateProject, Operations.UpdateProject]),
+	},
+];
 
 export const operations: INodeProperties[] = [
 	{
@@ -47,15 +144,6 @@ export const operations: INodeProperties[] = [
 				name: 'Get a Project',
 				value: 'getProject',
 				action: 'Get a project',
-				options: [
-					{
-						displayName: 'Project ID',
-						name: 'projectId',
-						type: 'number',
-						default: null,
-						description: 'ID of the project to retrieve',
-					},
-				],
 				routing: {
 					request: {
 						method: 'GET',
@@ -67,58 +155,6 @@ export const operations: INodeProperties[] = [
 				name: 'Create a Project',
 				value: 'createProject',
 				action: 'Create a project',
-				options: [
-					{
-						displayName: 'Name',
-						name: 'name',
-						type: 'string',
-						default: '',
-						required: true,
-						description: 'Project name (must be unique)',
-					},
-					{
-						displayName: 'Description',
-						name: 'description',
-						type: 'string',
-						typeOptions: {
-							rows: 3,
-						},
-						default: '',
-					},
-					{
-						displayName: 'Status',
-						name: 'status',
-						type: 'options',
-						options: [{ name: 'Do Not Set', value: '' }, ...projectStatusOptions],
-						default: '',
-					},
-					{
-						displayName: 'Enabled',
-						name: 'enabled',
-						type: 'boolean',
-						default: true,
-					},
-					{
-						displayName: 'View State',
-						name: 'viewState',
-						type: 'options',
-						options: [{ name: 'Do Not Set', value: '' }, ...viewStateOptions],
-						default: '',
-					},
-					{
-						displayName: 'Inherit Global Categories',
-						name: 'inheritGlobal',
-						type: 'boolean',
-						default: true,
-					},
-					{
-						displayName: 'File Upload Path',
-						name: 'filePath',
-						type: 'string',
-						default: '',
-						description: 'Server-side path for file uploads (advanced; uses global default if empty)',
-					},
-				],
 				routing: {
 					request: {
 						method: 'POST',
@@ -140,67 +176,6 @@ export const operations: INodeProperties[] = [
 				value: 'updateProject',
 				action: 'Update a project',
 				description: 'Update a project (only filled-in fields are changed)',
-				options: [
-					{
-						displayName: 'Name',
-						name: 'name',
-						type: 'string',
-						default: '',
-						description: 'New project name (leave empty to keep current)',
-					},
-					{
-						displayName: 'Description',
-						name: 'description',
-						type: 'string',
-						typeOptions: {
-							rows: 3,
-						},
-						default: '',
-					},
-					{
-						displayName: 'Status',
-						name: 'status',
-						type: 'options',
-						options: [{ name: 'Do Not Change', value: '' }, ...projectStatusOptions],
-						default: '',
-					},
-					{
-						displayName: 'Enabled',
-						name: 'enabled',
-						type: 'options',
-						options: [
-							{ name: 'Do Not Change', value: '' },
-							{ name: 'Yes', value: 'true' },
-							{ name: 'No', value: 'false' },
-						],
-						default: '',
-					},
-					{
-						displayName: 'View State',
-						name: 'viewState',
-						type: 'options',
-						options: [{ name: 'Do Not Change', value: '' }, ...viewStateOptions],
-						default: '',
-					},
-					{
-						displayName: 'Inherit Global Categories',
-						name: 'inheritGlobal',
-						type: 'options',
-						options: [
-							{ name: 'Do Not Change', value: '' },
-							{ name: 'Yes', value: 'true' },
-							{ name: 'No', value: 'false' },
-						],
-						default: '',
-					},
-					{
-						displayName: 'File Upload Path',
-						name: 'filePath',
-						type: 'string',
-						default: '',
-						description: 'Server-side path for file uploads (advanced)',
-					},
-				],
 				routing: {
 					request: {
 						method: 'PATCH',
@@ -227,4 +202,5 @@ export const operations: INodeProperties[] = [
 export default {
 	resource: resource,
 	operations: operations,
+	fields: fields,
 };

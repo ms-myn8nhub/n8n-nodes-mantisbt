@@ -1,5 +1,5 @@
 import type { INodeType, INodeTypeDescription } from 'n8n-workflow';
-import { mantisVerbsResources, mantisVerbsOperations } from './Operations';
+import { mantisVerbsResources, mantisVerbsOperations, mantisVerbsFields } from './Operations';
 import { options } from './options';
 export class Mantis implements INodeType {
 	description: INodeTypeDescription = {
@@ -42,8 +42,11 @@ export class Mantis implements INodeType {
 				options: mantisVerbsResources,
 				default: 'mantisIssueVerb',
 			},
-			...options,
+			// Operation selectors first, then shared fields (Issue ID, Project ID, ...),
+			// then per-operation input fields - all top-level so the editor renders them.
 			...mantisVerbsOperations,
+			...options,
+			...mantisVerbsFields,
 		],
 	};
 }

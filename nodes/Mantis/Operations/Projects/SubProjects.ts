@@ -11,6 +11,48 @@ export const enum Operations {
 	DeleteSubProject = 'deleteSubProject',
 }
 
+const showFor = (operations: string[]) => ({
+	show: {
+		resource: [resource.value],
+		operation: operations,
+	},
+});
+
+export const fields: INodeProperties[] = [
+	{
+		displayName: 'Sub-Project ID',
+		name: 'subProjectId',
+		type: 'number',
+		default: null,
+		description: 'ID of the project to attach as sub-project (provide ID or Name)',
+		displayOptions: showFor([Operations.AddSubProject]),
+	},
+	{
+		displayName: 'Sub-Project ID',
+		name: 'subProjectId',
+		type: 'number',
+		default: null,
+		required: true,
+		description: 'ID of the sub-project',
+		displayOptions: showFor([Operations.UpdateSubProject]),
+	},
+	{
+		displayName: 'Sub-Project Name',
+		name: 'subProjectName',
+		type: 'string',
+		default: '',
+		description: 'Name of the project to attach (used when Sub-Project ID is empty)',
+		displayOptions: showFor([Operations.AddSubProject]),
+	},
+	{
+		displayName: 'Inherit Parent Categories',
+		name: 'inheritParent',
+		type: 'boolean',
+		default: true,
+		displayOptions: showFor([Operations.AddSubProject, Operations.UpdateSubProject]),
+	},
+];
+
 export const operations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
@@ -27,30 +69,7 @@ export const operations: INodeProperties[] = [
 				name: 'Add a Sub-Project',
 				value: 'addSubProject',
 				action: 'Add a sub-project',
-				description:
-					'Link an existing project as a sub-project of the (parent) Project ID selected above',
-				options: [
-					{
-						displayName: 'Sub-Project ID',
-						name: 'subProjectId',
-						type: 'number',
-						default: null,
-						description: 'ID of the project to attach as sub-project (provide ID or Name)',
-					},
-					{
-						displayName: 'Sub-Project Name',
-						name: 'subProjectName',
-						type: 'string',
-						default: '',
-						description: 'Name of the project to attach (used when Sub-Project ID is empty)',
-					},
-					{
-						displayName: 'Inherit Parent Categories',
-						name: 'inheritParent',
-						type: 'boolean',
-						default: true,
-					},
-				],
+				description: 'Link an existing project as a sub-project of the Project ID selected above',
 				routing: {
 					request: {
 						method: 'POST',
@@ -68,22 +87,6 @@ export const operations: INodeProperties[] = [
 				value: 'updateSubProject',
 				action: 'Update a sub-project',
 				description: 'Update the parent-inheritance setting of a sub-project link',
-				options: [
-					{
-						displayName: 'Sub-Project ID',
-						name: 'subProjectId',
-						type: 'number',
-						default: null,
-						required: true,
-						description: 'ID of the sub-project',
-					},
-					{
-						displayName: 'Inherit Parent Categories',
-						name: 'inheritParent',
-						type: 'boolean',
-						default: true,
-					},
-				],
 				routing: {
 					request: {
 						method: 'PATCH',
@@ -102,4 +105,5 @@ export const operations: INodeProperties[] = [
 export default {
 	resource: resource,
 	operations: operations,
+	fields: fields,
 };

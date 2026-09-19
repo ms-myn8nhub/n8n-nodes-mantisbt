@@ -9,6 +9,8 @@ export const enum Operations {
 	GetIssueViewPage = 'getIssueViewPage',
 }
 
+export const fields: INodeProperties[] = [];
+
 export const operations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
@@ -25,15 +27,6 @@ export const operations: INodeProperties[] = [
 				name: 'Get Issue View Page',
 				value: 'getIssueViewPage',
 				action: 'Get issue view page',
-				options: [
-					{
-						displayName: 'Issue ID',
-						name: 'issueId',
-						type: 'number',
-						default: null,
-						description: 'ID of the issue to retrieve the view page for',
-					},
-				],
 				routing: {
 					request: {
 						method: 'GET',
@@ -49,4 +42,5 @@ export const operations: INodeProperties[] = [
 export default {
 	resource: resource,
 	operations: operations,
+	fields: fields,
 };

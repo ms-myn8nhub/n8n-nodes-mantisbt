@@ -49,8 +49,11 @@ Get Assignable Users, Add/Update Project User, Create/Update User. The
 - Enum fields (priority, severity, status, ...) offer the standard MantisBT
   labels; if your instance customizes them, set the field via an expression.
 
-**Testing**: `npm run build && node tools/smoke-test.js` simulates n8n's
-declarative routing resolution for every operation (19 checks).
+**Testing**: `npm run build && node tools/smoke-test.js` verifies (99 checks):
+field visibility per resource/operation via n8n's real `displayParameter`,
+`$parameter` coverage of every routing expression, absence of nested
+(non-rendered) option fields, request method/URL/body/qs resolution, and an
+end-to-end request against a mock server.
 
 ## Implementation status
 
@@ -203,5 +206,14 @@ _By the time users are looking for community nodes, they probably already know n
 
 ## Version history
 
+- **0.2.1** - **fix invisible input fields**: operation fields were nested inside
+  operation option entries (`INodePropertyOptions.options`), which the n8n editor
+  never renders; all fields are now top-level properties gated by
+  `displayOptions` (the standard declarative-node pattern). Also fixes two
+  upstream parameter-name mismatches (`select` vs `$parameter.selectFields`,
+  `filterId` vs `$parameter.filter`) that made "Select Fields" and "Filter"
+  inputs silently ineffective, and shows Select Fields for Get User By Username.
+  Adds UI-visibility assertions (using n8n's own `displayParameter`) to the
+  smoke test: 99 checks.
 - **0.2.0** - fix hardcoded `localhost:8989` baseURL and unresolved URL expressions; add create/update operations for issues, notes, projects, versions, sub-projects, project users and users; enable Users and Issue Notes resources; smoke-test tooling.
 - **0.1.3** - upstream (GET operations only; not connectable due to the baseURL bug).

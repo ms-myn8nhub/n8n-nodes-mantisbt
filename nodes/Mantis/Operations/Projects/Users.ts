@@ -21,6 +21,50 @@ const accessLevelOptions = [
 	'administrator',
 ].map((v) => ({ name: v, value: v }));
 
+export const fields: INodeProperties[] = [
+	{
+		displayName: 'User ID',
+		name: 'userId',
+		type: 'number',
+		default: null,
+		description: 'ID of the user to add/update (provide ID or Username)',
+		displayOptions: {
+			show: {
+				resource: [resource.value],
+				operation: [Operations.ProjectAddOrUpdateUser],
+			},
+		},
+	},
+	{
+		displayName: 'Username',
+		name: 'username',
+		type: 'string',
+		default: '',
+		description: 'Username (used when User ID is empty)',
+		displayOptions: {
+			show: {
+				resource: [resource.value],
+				operation: [Operations.ProjectAddOrUpdateUser],
+			},
+		},
+	},
+	{
+		displayName: 'Access Level',
+		name: 'accessLevel',
+		type: 'options',
+		options: accessLevelOptions,
+		default: 'developer',
+		required: true,
+		description: 'Project-specific access level for the user (required by the API)',
+		displayOptions: {
+			show: {
+				resource: [resource.value],
+				operation: [Operations.ProjectAddOrUpdateUser],
+			},
+		},
+	},
+];
+
 export const operations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
@@ -61,31 +105,6 @@ export const operations: INodeProperties[] = [
 				action: 'Add or update a project user',
 				description:
 					'Add a user to the project, or update their project-specific access level if already a member',
-				options: [
-					{
-						displayName: 'User ID',
-						name: 'userId',
-						type: 'number',
-						default: null,
-						description: 'ID of the user (provide ID or Username)',
-					},
-					{
-						displayName: 'Username',
-						name: 'username',
-						type: 'string',
-						default: '',
-						description: 'Username (used when User ID is empty)',
-					},
-					{
-						displayName: 'Access Level',
-						name: 'accessLevel',
-						type: 'options',
-						options: accessLevelOptions,
-						default: 'developer',
-						required: true,
-						description: 'Project-specific access level for the user',
-					},
-				],
 				routing: {
 					request: {
 						method: 'POST',
@@ -105,4 +124,5 @@ export const operations: INodeProperties[] = [
 export default {
 	resource: resource,
 	operations: operations,
+	fields: fields,
 };

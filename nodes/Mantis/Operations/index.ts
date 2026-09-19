@@ -27,3 +27,8 @@ const verbs = [
 export const mantisVerbsResources: INodePropertyOptions[] = verbs.flatMap((verb) => verb.resource);
 
 export const mantisVerbsOperations: INodeProperties[] = verbs.flatMap((verb) => verb.operations);
+
+/* Operation-specific input fields. These MUST be top-level node properties
+ * (gated via displayOptions) - fields nested inside an operation's option
+ * entry are never rendered by the n8n editor UI. */
+export const mantisVerbsFields: INodeProperties[] = verbs.flatMap((verb) => verb.fields ?? []);

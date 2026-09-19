@@ -29,12 +29,16 @@ const allResourceValues: (string | number | boolean)[] = mantisVerbsResources.ma
 
 export const enum Options {
 	IssueId = 'issueId',
-	Select = 'select',
+	// NOTE: these values are the actual node parameter names referenced by the
+	// routing expressions ($parameter.selectFields / $parameter.filter).
+	// They were 'select'/'filterId' before 0.2.1, so the fields rendered in the
+	// UI but their values were silently ignored by the requests.
+	Select = 'selectFields',
 	FileId = 'fileId',
 	PageSize = 'pageSize',
 	PageNumber = 'pageNumber',
 	ProjectId = 'projectId',
-	FilterId = 'filterId',
+	FilterId = 'filter',
 	TagId = 'tagId',
 	RelationshipId = 'relationshipId',
 	IssueNoteId = 'issueNoteId',
@@ -101,6 +105,7 @@ export const options: INodeProperties[] = [
 					UsersOperations.GetMyUserInfoSelect,
 					UsersOperations.GetUserById,
 					UsersOperations.GetUserByIdSelect,
+					UsersOperations.GetUserByUsername,
 				],
 				resource: allResourceValues,
 			},
@@ -155,6 +160,7 @@ export const options: INodeProperties[] = [
 			show: {
 				operation: [
 					IssuesOperations.GetAllIssues,
+					IssuesOperations.CreateAnIssue,
 					ProjectsUsersOperations.GetProjectUsers,
 					ProjectsUsersOperations.GetProjectUsersThatCanBeAssignedIssues,
 					ProjectsUsersOperations.ProjectAddOrUpdateUser,
@@ -344,32 +350,6 @@ export const options: INodeProperties[] = [
 					FiltersOperations.GetFilter,
 					FiltersOperations.DeleteFilter,
 				],
-				resource: allResourceValues,
-			},
-		},
-	},
-	{
-		displayName: 'Tag ID',
-		name: Options.TagId,
-		type: 'number',
-		default: null,
-		description: 'ID of the tag',
-		displayOptions: {
-			show: {
-				operation: [],
-				resource: allResourceValues,
-			},
-		},
-	},
-	{
-		displayName: 'Project ID',
-		name: Options.ProjectId,
-		type: 'number',
-		default: null,
-		description: 'ID of the project',
-		displayOptions: {
-			show: {
-				operation: [],
 				resource: allResourceValues,
 			},
 		},

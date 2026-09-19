@@ -13,6 +13,57 @@ export const enum Operations {
 	AddAttachmentsToIssue = 'addAttachmentsToIssue',
 }
 
+export const fields: INodeProperties[] = [
+	{
+		displayName: 'Text',
+		name: 'text',
+		type: 'string',
+		typeOptions: {
+			rows: 4,
+		},
+		default: '',
+		required: true,
+		description: 'Note text',
+		displayOptions: {
+			show: {
+				resource: [resource.value],
+				operation: [Operations.CreateAnIssueNote],
+			},
+		},
+	},
+	{
+		displayName: 'View State',
+		name: 'viewState',
+		type: 'options',
+		options: [
+			{ name: 'Do Not Set', value: '' },
+			{ name: 'Public', value: 'public' },
+			{ name: 'Private', value: 'private' },
+		],
+		default: '',
+		displayOptions: {
+			show: {
+				resource: [resource.value],
+				operation: [Operations.CreateAnIssueNote],
+			},
+		},
+	},
+	{
+		displayName: 'Time Tracking Duration',
+		name: 'timeTracking',
+		type: 'string',
+		default: '',
+		placeholder: '00:15',
+		description: 'Duration in HH:MM format (requires time tracking to be enabled)',
+		displayOptions: {
+			show: {
+				resource: [resource.value],
+				operation: [Operations.CreateAnIssueNote],
+			},
+		},
+	},
+];
+
 export const operations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
@@ -29,40 +80,7 @@ export const operations: INodeProperties[] = [
 				name: 'Create an Issue Note',
 				value: Operations.CreateAnIssueNote,
 				action: 'Create an issue note',
-				description:
-					'Add a note to an issue, optionally with time tracking. The Issue ID field comes from the options below.',
-				options: [
-					{
-						displayName: 'Text',
-						name: 'text',
-						type: 'string',
-						typeOptions: {
-							rows: 4,
-						},
-						default: '',
-						required: true,
-						description: 'Note text',
-					},
-					{
-						displayName: 'View State',
-						name: 'viewState',
-						type: 'options',
-						options: [
-							{ name: 'Do Not Set', value: '' },
-							{ name: 'Public', value: 'public' },
-							{ name: 'Private', value: 'private' },
-						],
-						default: '',
-					},
-					{
-						displayName: 'Time Tracking Duration',
-						name: 'timeTracking',
-						type: 'string',
-						default: '',
-						placeholder: '00:15',
-						description: 'Duration in HH:MM format (requires time tracking to be enabled)',
-					},
-				],
+				description: 'Add a note to an issue, optionally with time tracking',
 				routing: {
 					request: {
 						method: 'POST',
@@ -84,4 +102,5 @@ export const operations: INodeProperties[] = [
 export default {
 	resource: resource,
 	operations: operations,
+	fields: fields,
 };

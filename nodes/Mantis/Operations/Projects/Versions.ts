@@ -13,14 +13,97 @@ export const enum Operations {
 	DeleteProjectVersion = 'deleteProjectVersion',
 }
 
-const versionIdField = (required: boolean): INodeProperties => ({
-	displayName: 'Version ID',
-	name: 'versionId',
-	type: 'number',
-	default: null,
-	required,
-	description: 'ID of the project version',
+const showFor = (operations: string[]) => ({
+	show: {
+		resource: [resource.value],
+		operation: operations,
+	},
 });
+
+const triStateOptions = [
+	{ name: 'Do Not Change', value: '' },
+	{ name: 'Yes', value: 'true' },
+	{ name: 'No', value: 'false' },
+];
+
+export const fields: INodeProperties[] = [
+	{
+		displayName: 'Version ID',
+		name: 'versionId',
+		type: 'number',
+		default: null,
+		required: true,
+		description: 'ID of the project version',
+		displayOptions: showFor([Operations.GetProjectVersion, Operations.UpdateProjectVersion]),
+	},
+	{
+		displayName: 'Name',
+		name: 'name',
+		type: 'string',
+		default: '',
+		required: true,
+		placeholder: 'v1.0.0',
+		description: 'Version name',
+		displayOptions: showFor([Operations.CreateProjectVersion]),
+	},
+	{
+		displayName: 'Name',
+		name: 'name',
+		type: 'string',
+		default: '',
+		description: 'New version name (leave empty to keep current)',
+		displayOptions: showFor([Operations.UpdateProjectVersion]),
+	},
+	{
+		displayName: 'Description',
+		name: 'description',
+		type: 'string',
+		typeOptions: {
+			rows: 3,
+		},
+		default: '',
+		displayOptions: showFor([Operations.CreateProjectVersion, Operations.UpdateProjectVersion]),
+	},
+	{
+		displayName: 'Released',
+		name: 'released',
+		type: 'boolean',
+		default: false,
+		displayOptions: showFor([Operations.CreateProjectVersion]),
+	},
+	{
+		displayName: 'Released',
+		name: 'released',
+		type: 'options',
+		options: triStateOptions,
+		default: '',
+		displayOptions: showFor([Operations.UpdateProjectVersion]),
+	},
+	{
+		displayName: 'Obsolete',
+		name: 'obsolete',
+		type: 'boolean',
+		default: false,
+		displayOptions: showFor([Operations.CreateProjectVersion]),
+	},
+	{
+		displayName: 'Obsolete',
+		name: 'obsolete',
+		type: 'options',
+		options: triStateOptions,
+		default: '',
+		displayOptions: showFor([Operations.UpdateProjectVersion]),
+	},
+	{
+		displayName: 'Timestamp',
+		name: 'timestamp',
+		type: 'string',
+		default: '',
+		placeholder: '2020-02-20',
+		description: 'Release date (YYYY-MM-DD)',
+		displayOptions: showFor([Operations.CreateProjectVersion, Operations.UpdateProjectVersion]),
+	},
+];
 
 export const operations: INodeProperties[] = [
 	{
@@ -49,7 +132,6 @@ export const operations: INodeProperties[] = [
 				name: 'Get a Project Version',
 				value: 'getProjectVersion',
 				action: 'Get a project version',
-				options: [versionIdField(true)],
 				routing: {
 					request: {
 						method: 'GET',
@@ -61,46 +143,6 @@ export const operations: INodeProperties[] = [
 				name: 'Create a Project Version',
 				value: 'createProjectVersion',
 				action: 'Create a project version',
-				options: [
-					{
-						displayName: 'Name',
-						name: 'name',
-						type: 'string',
-						default: '',
-						required: true,
-						placeholder: 'v1.0.0',
-						description: 'Version name',
-					},
-					{
-						displayName: 'Description',
-						name: 'description',
-						type: 'string',
-						typeOptions: {
-							rows: 3,
-						},
-						default: '',
-					},
-					{
-						displayName: 'Released',
-						name: 'released',
-						type: 'boolean',
-						default: false,
-					},
-					{
-						displayName: 'Obsolete',
-						name: 'obsolete',
-						type: 'boolean',
-						default: false,
-					},
-					{
-						displayName: 'Timestamp',
-						name: 'timestamp',
-						type: 'string',
-						default: '',
-						placeholder: '2020-02-20',
-						description: 'Release date (YYYY-MM-DD)',
-					},
-				],
 				routing: {
 					request: {
 						method: 'POST',
@@ -120,55 +162,6 @@ export const operations: INodeProperties[] = [
 				value: 'updateProjectVersion',
 				action: 'Update a project version',
 				description: 'Update a project version (only filled-in fields are changed)',
-				options: [
-					versionIdField(true),
-					{
-						displayName: 'Name',
-						name: 'name',
-						type: 'string',
-						default: '',
-						description: 'New version name (leave empty to keep current)',
-					},
-					{
-						displayName: 'Description',
-						name: 'description',
-						type: 'string',
-						typeOptions: {
-							rows: 3,
-						},
-						default: '',
-					},
-					{
-						displayName: 'Released',
-						name: 'released',
-						type: 'options',
-						options: [
-							{ name: 'Do Not Change', value: '' },
-							{ name: 'Yes', value: 'true' },
-							{ name: 'No', value: 'false' },
-						],
-						default: '',
-					},
-					{
-						displayName: 'Obsolete',
-						name: 'obsolete',
-						type: 'options',
-						options: [
-							{ name: 'Do Not Change', value: '' },
-							{ name: 'Yes', value: 'true' },
-							{ name: 'No', value: 'false' },
-						],
-						default: '',
-					},
-					{
-						displayName: 'Timestamp',
-						name: 'timestamp',
-						type: 'string',
-						default: '',
-						placeholder: '2020-02-20',
-						description: 'Release date (YYYY-MM-DD)',
-					},
-				],
 				routing: {
 					request: {
 						method: 'PATCH',
@@ -193,4 +186,5 @@ export const operations: INodeProperties[] = [
 export default {
 	resource: resource,
 	operations: operations,
+	fields: fields,
 };
